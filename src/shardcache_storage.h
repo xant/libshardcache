@@ -32,6 +32,27 @@
 typedef int (*shardcache_fetch_item_callback_t)
     (void *key, size_t klen, void **value, size_t *vlen, void *priv);
 
+
+/**
+ * @brief Callbback to provide access to a local-only key.
+ *        Local keys live only on the local filesystem of node and won't be distributed or cached.
+ *        The purpose is to allow storing big/huge data which wouldn't fit in memory.
+ *        The data can still be accessed asynchronously in chunks, without fully loading
+ *        it in memory
+ * @param key   A valid pointer to the key
+ * @param klen  The length of the key
+ * @param fd    A pointer to where to store the filedescriptor that can be used to
+ *              read the data.
+ *              The caller has the responsibility to close the filedescriptor when done with it.
+ * @param vlen  If provided the length of the returned value will be stored
+ *              at the location pointed by vlen
+ * @param priv  The 'priv' pointer previously stored in the shardcache_storage_t
+ *              structure at initialization time
+ * @return 0 on success; -1 otherwise
+ */
+typedef int (*shardcache_fetch_local_item_callback_t)
+    (void *key, size_t klen, int *fd, size_t *vlen, void *priv);
+
 /**
  * @brief Callback to provide values for multiple keys at once.
  *
@@ -87,6 +108,26 @@ typedef int (*shardcache_fetch_items_callback_t)
  */
 typedef int (*shardcache_store_item_callback_t)
     (void *key, size_t klen, void *value, size_t vlen, int if_not_exists, void *priv);
+
+/**
+ * @brief Callback to store a new value for a given local-only key.
+ *        Local keys live only on the local filesystem of node and won't be distributed or cached.
+ *        The purpose is to allow storing big/huge data which wouldn't fit in memory.
+ *        The data can still be accessed asynchronously in chunks, without fully loading
+ *        it in memory
+ * @param key   A valid pointer to the key
+ * @param klen  The length of the key
+ * @param local_path  A valid path where to find the data
+ * @param vlen  If provided the length of the returned value will be stored
+ *              at the location pointed by vlen
+ * @param if_not_exists A boolean flag which determines if the value should be stored
+ *                      only if there is none already
+ * @param priv  The 'priv' pointer previously stored in the shardcache_storage_t
+ *              structure at initialization time
+ * @return 0 on success; -1 otherwise
+ */
+typedef int (*shardcache_store_local_item_callback_t)
+    (void *key, size_t klen, char *local_path, size_t vlen, int if_not_exists, void *priv);
 
 /**
  * @brief Callback to atomically compare and swap a value for a given key
@@ -280,11 +321,16 @@ struct _shardcache_storage_s {
     //! The fecth callback
     shardcache_fetch_item_callback_t       fetch;
 
+    shardcache_fetch_local_item_callback_t fetch_local;
+
     //! The fetch multiple items callback
     shardcache_fetch_items_callback_t      fetch_multi;
 
     //! The store callback (optional if the storage is indended to be read-only)
     shardcache_store_item_callback_t       store;
+
+    //! Store data that wouldn't fit in memory
+    shardcache_store_local_item_callback_t store_local;
 
     //! The CAS callback (optional if the storage intends to expose the CAS functionality)
     shardcache_cas_item_callback_t         cas;

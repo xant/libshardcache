@@ -1036,6 +1036,35 @@ shardcache_get(shardcache_t *cache,
 
     void *obj_ptr = NULL;
     arc_resource_t res = arc_lookup(cache->arc, (const void *)key, klen, &obj_ptr, 1, cache->expire_time);
+    if ((!res || !obj_ptr) && cache->storage.fetch_local != NULL) {
+        if (res) { // should never happen, maybe an assertion would make more sense
+            arc_release_resource(cache->arc, res);
+            return -1;
+        }
+
+        int fd = -1;
+        size_t vlen = 0;
+        if (cache->storage.fetch_local(key, klen, &fd, &vlen, cache->storage.priv) == 0) {
+            fbuf_t buf = FBUF_STATIC_INITIALIZER;
+            size_t sent = 0;
+            struct timeval tv;
+            int read_size = 16 * 1024;
+            int rb = fbuf_read(&buf, fd, read_size);
+            while(rb > 0) {
+                gettimeofday(&tv, NULL);
+                sent += rb;
+                if (sent == vlen) { 
+                    cb(key, klen, fbuf_data(&buf), rb, vlen, &tv, priv);
+                }
+                cb(key, klen, fbuf_data(&buf), rb, 0, &tv, priv);
+                fbuf_clear(&buf);
+                rb = fbuf_read(&buf, fd, read_size);
+            }
+            return 0;
+        }
+    }
+
+    res = arc_lookup(cache->arc, (const void *)key, klen, &obj_ptr, 1, cache->expire_time);
     if (!res)
         return -1;
 
@@ -1938,6 +1967,17 @@ int shardcache_set(shardcache_t *cache,
     }
 
     return shardcache_set_internal(cache, key, klen, NULL, 0, value, vlen, expire, cexpire, if_not_exists ? 1 : 0, 0, cb, priv);
+}
+
+int shardcache_set_local(shardcache_t *cache,
+                         void *key,
+                         size_t klen,
+                         char *local_path,
+                         size_t vlen,
+                         int if_not_exists) {
+    if (!key || !klen || !cache->storage.store_local)
+        return -1;
+    return cache->storage.store_local(key, klen, local_path, vlen, if_not_exists, cache->storage.priv);
 }
 
 int

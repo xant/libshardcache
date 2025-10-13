@@ -524,6 +524,29 @@ int shardcache_set(shardcache_t *cache,
                    void *priv);
 
 /**
+ * @brief Set the value for a local key.
+ *        Local keys live only on the local filesystem of node and won't be distributed or cached.
+ *        The purpose is to allow storing big/huge data which wouldn't fit in memory.
+ *        The data can still be accessed asynchronously in chunks, without fully loading
+ *        it in memory
+ * @param cache  A valid pointer to a shardcache_t structure
+ * @param key    A valid pointer to the key
+ * @param klen   The length of the key
+ * @param local_path  A valid path where to find the data
+ * @param vlen   The length of the value
+ * @param if_not_exists If this param is true, the value will be set only
+ *                      if there isn't one already stored
+ * @return 0 on success,
+ *         1 if the value already exists on the storage and the if_not_exists param is true;\n
+ *        -1 otherwise
+ */int shardcache_set_local(shardcache_t *cache,
+                       void *key,
+                       size_t klen,
+                       char *local_path,
+                       size_t vlen,
+                       int if_not_exists);
+
+/**
  * @brief Set the value for multiple keys fetching the responses asyncrhonously
  * @param cache  A valid pointer to a shardcache_t structure
  * @param keys   A valid pointer to an array of keys
