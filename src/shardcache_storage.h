@@ -124,7 +124,10 @@ typedef int (*shardcache_store_item_callback_t)
  *                      only if there is none already
  * @param priv  The 'priv' pointer previously stored in the shardcache_storage_t
  *              structure at initialization time
- * @return 0 on success; -1 otherwise
+ * @return 0 if success;\n
+ *         1 if a value was already present in the storage while the 'if_not_exists
+ *           flag is on\n
+ *         -1 otherwise
  */
 typedef int (*shardcache_store_local_item_callback_t)
     (void *key, size_t klen, char *local_path, size_t vlen, int if_not_exists, void *priv);
@@ -301,7 +304,7 @@ typedef void (*shardcache_thread_start_callback_t)(void *priv);
 typedef void (*shardcache_thread_exit_callback_t)(void *priv);
 
 
-#define SHARDCACHE_STORAGE_API_VERSION 0x02
+#define SHARDCACHE_STORAGE_API_VERSION 0x03
 
 typedef struct _shardcache_storage_s shardcache_storage_t;
 typedef int (*shardcache_storage_init_t)(shardcache_storage_t *, char **);
