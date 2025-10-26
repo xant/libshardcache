@@ -12,16 +12,19 @@
 
 #include "arc.h"
 
+#ifdef USE_PACKED_STRUCTURES
+#define PACK_IF_NECESSARY __attribute__((packed))
+#else
+#define PACK_IF_NECESSARY
+#endif
 
 /**********************************************************************
  * Simple double-linked list, inspired by the implementation used in the
  * linux kernel.
  */
-#pragma pack(push, 1)
 typedef struct _arc_list {
     struct _arc_list *prev, *next;
-} arc_list_t;
-#pragma pack(pop)
+} PACK_IF_NECESSARY arc_list_t;
 
 #define arc_list_entry(ptr, type, field) \
     ((type*) (((char*)ptr) - offsetof(type, field)))
@@ -35,18 +38,15 @@ typedef struct _arc_list {
 /**********************************************************************
  * The arc state represents one of the m{r,f}u{g,} lists
  */
-#pragma pack(push, 1)
 typedef struct _arc_state {
     arc_list_t head;
     uint64_t size; // note must be accessed only via atomic functions
     uint64_t count; // note must be accessed only via atomic functions
-} arc_state_t;
-#pragma pack(pop)
+} PACK_IF_NECESSARY arc_state_t;
 
 /* This structure represents an object that is stored in the cache. Consider
  * this structure private, don't access the fields directly. When creating
  * a new object, use the arc_object_create() function to allocate and initialize it. */
-#pragma pack(push, 1)
 typedef struct _arc_object {
     arc_state_t *state;
     arc_list_t head;
@@ -58,8 +58,7 @@ typedef struct _arc_object {
     refcnt_node_t *node;
     int async;
     int locked;
-} arc_object_t;
-#pragma pack(pop)
+} PACK_IF_NECESSARY arc_object_t;
 
 /* The actual cache. */
 struct _arc {

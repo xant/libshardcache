@@ -7,8 +7,12 @@
 #include "async_reader.h"
 #include "messaging.h"
 
+#ifdef USE_PACKED_STRUCTURES
+#define PACK_IF_NECESSARY __attribute__((packed))
+#else
+#define PACK_IF_NECESSARY
+#endif
 
-#pragma pack(push, 1)
 struct _async_read_ctx_s {
     async_read_callback_t cb;
     shardcache_hdr_t hdr;
@@ -24,8 +28,7 @@ struct _async_read_ctx_s {
     char version;
     int moff;
     struct timeval last_update;
-};
-#pragma pack(pop)
+} PACK_IF_NECESSARY;
 
 int
 async_read_context_state(async_read_ctx_t *ctx)

@@ -4,7 +4,9 @@
 
 #include <stdint.h>
 
+#ifdef USE_PACKED_STRUCTURES
 #pragma pack(push, 1)
+#endif
 typedef struct {
     void *key;   // The key (weak reference to the actual key stored in the arc resource)
     size_t klen; // The length of the key
@@ -43,7 +45,9 @@ typedef struct {
 
     arc_resource_t res;
 } cached_object_t;
+#ifdef USE_PACKED_STRUCTURES
 #pragma pack(pop)
+#endif
 
 #define COBJ_CHECK_FLAGS(_o, _f) ((((_o)->flags) & (_f)) == (_f))
 #define COBJ_SET_FLAG(_o, _f) ((_o)->flags |= (_f))

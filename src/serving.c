@@ -25,7 +25,9 @@
 
 #include "shardcache_internal.h" // for the replica memeber
 
+#ifdef USE_PACKED_STRUCTURES
 #pragma pack(push, 1)
+#endif
 typedef struct {
     pthread_t thread;
     queue_t *jobs;
@@ -113,7 +115,9 @@ struct _shardcache_connection_context_s {
     int closed;
     struct timeval in_prune_since;
 };
+#ifdef USE_PACKED_STRUCTURES
 #pragma pack(pop)
+#endif
 
 static int
 async_read_handler(void *data, size_t len, int idx, size_t total_len, void *priv)

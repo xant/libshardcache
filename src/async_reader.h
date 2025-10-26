@@ -46,13 +46,17 @@ async_read_context_state_t async_read_context_update(async_read_ctx_t *ctx);
 //       connection and retreive the data asynchronously.
 //       If the async_read_wrk_t param is not provided the functions
 //       will block until the response has been fully retrieved
+#ifdef USE_PACKED_STRUCTURES
 #pragma pack(push, 1)
+#endif
 typedef struct {
     async_read_ctx_t *ctx;
     iomux_callbacks_t cbs;
     int fd;
 } async_read_wrk_t;
+#ifdef USE_PACKED_STRUCTURES
 #pragma pack(pop)
+#endif
 
 int read_async_input_data(iomux_t *iomux, int fd, unsigned char *data, int len, void *priv);
 void read_async_input_eof(iomux_t *iomux, int fd, void *priv);
